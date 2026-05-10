@@ -115,6 +115,16 @@ FMS/
 | reference/time-and-calendar.md | time_manager API |
 | reference/debugging.md | Common errors |
 
+## Critical agent gotchas (Gemini-reviewed)
+
+- **`FMScoupler` is a separate repo**, not part of FMS itself. It lives at `NOAA-GFDL/FMScoupler` and is the top-level driver for atm-ocn-ice models. The `coupler/` directory in this FMS repo is just type definitions and flux exchange interfaces.
+- **`mpp` is a communication layer, not a parallel I/O layer.** Modern parallel I/O is in `fms2_io`. The legacy `mpp_io` is functionally extinct; do not write new code against it.
+- **Configuration goes through `input.nml`.** Every FMS module reads its config from a namelist block (`&diag_manager_nml`, `&fms_io_nml`, `&fms_nml`, etc.) in a file conventionally named `input.nml` in the run directory.
+- **`field_table` defines tracers.** A run directory needs both `diag_table` (output) and `field_table` (tracers/inputs); `field_manager` reads the latter.
+- **Grid files are external NetCDF inputs.** FMS expects `mosaic.nc`, `topog.nc`, `grid_spec.nc` files referenced from the namelist; agent must locate or generate them.
+- **`io_layout` controls file count, not just PE subset.** Setting `io_layout = 2,2` produces 4 output files per diag; `1,1` produces one. Mismatch with downstream tools causes silent breakage.
+- **mkmf still exists.** GFDL's internal workflows often use `bin/mkmf` (legacy makefile generator) instead of CMake; check what the host model actually uses.
+
 ## Status
 
-Scaffold (v0.1.0-scaffold). Source-grounded layout and rules verified against cloned tree. Operational depth being filled in.
+Scaffold (v0.1.0-scaffold). Source-grounded layout and rules verified against cloned tree, with Gemini critique pass on 2026-05-09. Operational depth being filled in.
